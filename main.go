@@ -8,7 +8,6 @@ import (
 	"net/http"
 
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/gorilla/mux"
 	"github.com/gorilla/sessions"
 )
 
@@ -43,9 +42,8 @@ func main() {
 	templates, err = template.ParseGlob("template/*")
 	checkerr(err)
 	connect()
-	r := mux.NewRouter()
 	http.HandleFunc("/", index)
-	r.HandleFunc("/regis", regis)
+	http.HandleFunc("/regis", regis)
 	// r.HandleFunc("/login", loginGet).Methods("GET")
 	http.HandleFunc("/login", loginPost)
 	// r.HandleFunc("/test", testGet).Methods("GET")
@@ -53,31 +51,35 @@ func main() {
 	http.HandleFunc("/logout", logout)
 	http.HandleFunc("/sparoom", sparoom)
 	http.HandleFunc("/selectdata", selectdata)
+	http.HandleFunc("/selectdataforad", selectdataforad)
 	http.HandleFunc("/booking", booking)
+	http.HandleFunc("/adspa", adspa)
 	http.ListenAndServe(":8080", nil)
 	// http.HandleFunc("/test", dbselect)
 }
 
 func regis(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "template/regis.html")
+	if r.Method != "POST" {
+		templates.ExecuteTemplate(w, "regis.html", nil)
+		return
+	}
 	db := connect()
 	username := r.FormValue("username")
 	password := r.FormValue("password")
 	var user string
 	err := db.QueryRow("SELECT username FROM db_user WHERE username=?", username).Scan(&user)
-	switch {
-	case err == sql.ErrNoRows:
+	if err == sql.ErrNoRows {
 		_, err = db.Exec("INSERT INTO db_user(username,password) VALUES(? , ?)", username, password)
 		if err != nil {
 			http.Error(w, "SERVER ERROR 1", 500)
 			return
 		}
-		return
-	case err != nil:
+		// templates.ExecuteTemplate(w, "login.html", "กรุณากรอกให้ถูกต้อง")
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	} else if err != nil {
 		http.Error(w, "SERVER ERROR 2", 500)
-	default:
-		http.Redirect(w, r, "index.html", http.StatusMovedPermanently)
 	}
+
 }
 
 func loginPost(w http.ResponseWriter, r *http.Request) {
@@ -90,8 +92,8 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	password := r.FormValue("password")
 	var name string
 	var pass string
-
-	err := db.QueryRow("SELECT username,password FROM db_user WHERE username=? AND password=?", username, password).Scan(&name, &pass)
+	var sta string
+	err := db.QueryRow("SELECT username,password,u_status FROM db_user WHERE username=? AND password=?", username, password).Scan(&name, &pass, &sta)
 	if err != nil {
 		templates.ExecuteTemplate(w, "login.html", "เข้าสู่ระบบผิดพลาด")
 		return
@@ -99,7 +101,11 @@ func loginPost(w http.ResponseWriter, r *http.Request) {
 	session, _ := store.Get(r, "session")
 	session.Values["username"] = username
 	session.Save(r, w)
-	http.Redirect(w, r, "/spa", http.StatusSeeOther)
+	if sta == "1" {
+		http.Redirect(w, r, "/spa", http.StatusSeeOther)
+	} else if sta == "2" {
+		http.Redirect(w, r, "/adspa", http.StatusSeeOther)
+	}
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -111,6 +117,10 @@ func spa(w http.ResponseWriter, r *http.Request) {
 	untyped := session.Values["username"]
 	username := untyped.(string)
 	templates.ExecuteTemplate(w, "spa.html", username)
+}
+
+func adspa(w http.ResponseWriter, r *http.Request) {
+	templates.ExecuteTemplate(w, "adminspa.html", nil)
 }
 
 func sparoom(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +136,7 @@ func sparoom(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "ERROR", 500)
 			return
 		}
-		templates.ExecuteTemplate(w, "spa.html", "INSERT Successfully")
+		templates.ExecuteTemplate(w, "adminspa.html", "INSERT Successfully")
 	} else if err != nil {
 		var re sql.Result
 		upd, err := db.Prepare("UPDATE db_spa SET s_max = ? WHERE s_day = ?")
@@ -135,10 +145,10 @@ func sparoom(w http.ResponseWriter, r *http.Request) {
 		rowsAff, aa := re.RowsAffected()
 		if err != nil || rowsAff != 1 {
 			fmt.Println(aa)
-			templates.ExecuteTemplate(w, "spa.html", "Have some error, Please check")
+			templates.ExecuteTemplate(w, "adminspa.html", "Have some error, Please check")
 			return
 		} else {
-			templates.ExecuteTemplate(w, "spa.html", "Update Successfully")
+			templates.ExecuteTemplate(w, "adminspa.html", "Update Successfully")
 		}
 	}
 }
@@ -183,7 +193,6 @@ func booking(w http.ResponseWriter, r *http.Request) {
 }
 
 func selectdata(w http.ResponseWriter, r *http.Request) {
-
 	db := connect()
 	rows, err := db.Query("SELECT * FROM db_spa Order by s_day ASC")
 	checkerr(err)
@@ -197,6 +206,22 @@ func selectdata(w http.ResponseWriter, r *http.Request) {
 		spases = append(spases, s)
 	}
 	templates.ExecuteTemplate(w, "spa.html", spases)
+}
+
+func selectdataforad(w http.ResponseWriter, r *http.Request) {
+	db := connect()
+	rows, err := db.Query("SELECT * FROM db_spa Order by s_day ASC")
+	checkerr(err)
+	var spases []spasession
+	for rows.Next() {
+		var s spasession
+		err = rows.Scan(&s.ID, &s.Day, &s.Qry, &s.Lmtroom)
+		if err != nil {
+			panic(err)
+		}
+		spases = append(spases, s)
+	}
+	templates.ExecuteTemplate(w, "adminspa.html", spases)
 }
 
 type bdd struct {

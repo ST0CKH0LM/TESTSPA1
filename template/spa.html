@@ -11,29 +11,6 @@
             <h2>Welcome to booking session <p id="texthide"> </p></h2>
             <a href="/logout">ออกจากระบบ</a>
         </nav>
-        <div>
-            <div align="center">
-                <form action="/sparoom" method="POST">
-                    <p>เพิ่มจำนวนห้องที่สามารถเช่าได้</p>
-                    <input id="numroom" name="numroom"  type="number" min=0 max=10 placeholder="0">
-                    <!-- <input id="bookdate" type="date"> -->
-                    <select id="bookdate" name="bookdate">
-                        <option value="">โปรดเลือกวันที่ต้องการแก้ไขจำนวนห้อง</option>
-                        <option value="1">วันที่ 1</option>
-                        <option value="2">วันที่ 2</option>
-                        <option value="3">วันที่ 3</option>
-                        <option value="4">วันที่ 4</option>
-                        <option value="5">วันที่ 5</option>
-                        <option value="6">วันที่ 6</option>
-                        <option value="7">วันที่ 7</option>
-                        <option value="8">วันที่ 8</option>
-                        <option value="9">วันที่ 9</option>
-                        <option value="10">วันที่ 10</option>
-                      </select>
-                    <input type="submit" value="Confirm" title="เพิ่มจำนวนห้อง">
-                </form>
-            </div>
-        </div>
         <div align="center">
             <p>Booking ห้อง Spa</p>
             <form style="display: inline;" action="/booking">
