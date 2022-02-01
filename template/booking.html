@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div align="center">
+        <div>
+            <div>
+            {{ . }}
+            {{range.}}
+            {{end}}
+            </div>
+            <h1>Booking Session</h1>
+
+        </div>
+        <form method="POST">
+            <select id="bookdate" name="bookdate">
+                <option value="">โปรดเลือกวันที่ต้องการแก้ไขจำนวนห้อง</option>
+                <option value="1">วันที่ 1</option>
+                <option value="2">วันที่ 2</option>
+                <option value="3">วันที่ 3</option>
+                <option value="4">วันที่ 4</option>
+                <option value="5">วันที่ 5</option>
+                <option value="6">วันที่ 6</option>
+                <option value="7">วันที่ 7</option>
+                <option value="8">วันที่ 8</option>
+                <option value="9">วันที่ 9</option>
+                <option value="10">วันที่ 10</option>
+              </select>
+            <input type="submit" value="Confirm" title="เพิ่มจำนวนห้อง">
+        </form>
+    </div>
+</body>
+</html>
